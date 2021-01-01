@@ -18,7 +18,7 @@ class Model {
 public:
     std::vector<Mesh> meshes;
     std::vector<Texture> loaded_textures;
-
+    
     std::string directory;
     Model(std::string path) {
 
