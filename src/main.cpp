@@ -138,11 +138,9 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    unordered_map<string, Shader> shaders_map;
 
     // load models
     // -----------
-    unordered_map<string, Model> models;
 
     // render loop
     // -----------
