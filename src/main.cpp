@@ -15,6 +15,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod);
 void processInput(GLFWwindow *window);
 
 // settings
@@ -29,6 +30,8 @@ bool firstMouse = true;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+bool isSpotlightActived = false;
 
 int main()
 {
@@ -52,6 +55,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -200,7 +204,7 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 2.0f, -3.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)(10.0 * sin(1.0 + glfwGetTime()))),
+        model = glm::rotate(model, glm::radians((float)(10.0 * sin(1.0 + 2*glfwGetTime()))),
                             glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
         pointLightPositions[0] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
@@ -211,7 +215,7 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)(10.0 * sin(glfwGetTime()))),
+        model = glm::rotate(model, glm::radians((float)(10.0 * sin(2*glfwGetTime()))),
                             glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
         pointLightPositions[1] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
@@ -222,7 +226,7 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, 2.0f, 3.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)(10.0 * sin(2.0 + glfwGetTime()))),
+        model = glm::rotate(model, glm::radians((float)(10.0 * sin(2.0 + 2*glfwGetTime()))),
                             glm::vec3(0.0f, 0.0f, 1.0f));
         model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
         pointLightPositions[2] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
@@ -263,9 +267,16 @@ int main()
         // spotLight
         floorShader.setVec3("spotLight.position", camera.Position);
         floorShader.setVec3("spotLight.direction", camera.Front);
-        floorShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-        floorShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-        floorShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+        if(isSpotlightActived){
+            floorShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+            floorShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+            floorShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+        }
+        else{ // All to 0.
+            floorShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+            floorShader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f);
+            floorShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f);
+        }
         floorShader.setFloat("spotLight.constant", 1.0f);
         floorShader.setFloat("spotLight.linear", 0.09);
         floorShader.setFloat("spotLight.quadratic", 0.032);
@@ -340,4 +351,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod) {
+    if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+        isSpotlightActived = !isSpotlightActived;
+    }
 }
