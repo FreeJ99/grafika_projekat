@@ -110,9 +110,10 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    unsigned int floorTexture = TextureFromFile("floor_diffuse.png", "resources/objects/floor");
+    unsigned int floorDiffTexture = TextureFromFile("floor_diffuse.png", "resources/objects/floor");
+    unsigned int floorSpecTexture = TextureFromFile("floor_specular2.png", "resources/objects/floor");
 
-
+    glm::vec3 pointLightPositions[3];
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -196,19 +197,22 @@ int main()
         lightShader.setMat4("view", view);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 2.0f, -3.0f));
+        pointLightPositions[0] = glm::vec3(0.0f, 2.0f, -3.0f);
+        model = glm::translate(model, pointLightPositions[0]);
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         lightShader.setMat4("model", model);
         lightModel.Draw(lightShader);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
+        pointLightPositions[1] = glm::vec3(0.0f, 2.0f, 0.0f);
+        model = glm::translate(model, pointLightPositions[1]);
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         lightShader.setMat4("model", model);
         lightModel.Draw(lightShader);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 3.0f));
+        pointLightPositions[2] = glm::vec3(0.0f, 2.0f, 3.0f);
+        model = glm::translate(model, pointLightPositions[2]);
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
         lightShader.setMat4("model", model);
         lightModel.Draw(lightShader);
@@ -217,12 +221,56 @@ int main()
         floorShader.use();
         floorShader.setMat4("projection", projection);
         floorShader.setMat4("view", view);
+
+        float pointLightLinear = 0.09;
+        float pointLightQuadratic = 0.032;
+        // point light 1
+        floorShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+        floorShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+        floorShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+        floorShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+        floorShader.setFloat("pointLights[0].constant", 1.0f);
+        floorShader.setFloat("pointLights[0].linear", pointLightLinear);
+        floorShader.setFloat("pointLights[0].quadratic", pointLightQuadratic);
+        // point light 2
+        floorShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+        floorShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+        floorShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+        floorShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+        floorShader.setFloat("pointLights[1].constant", 1.0f);
+        floorShader.setFloat("pointLights[1].linear", pointLightLinear);
+        floorShader.setFloat("pointLights[1].quadratic", pointLightQuadratic);
+        // point light 3
+        floorShader.setVec3("pointLights[2].position", pointLightPositions[2]);
+        floorShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+        floorShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+        floorShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+        floorShader.setFloat("pointLights[2].constant", 1.0f);
+        floorShader.setFloat("pointLights[2].linear", pointLightLinear);
+        floorShader.setFloat("pointLights[2].quadratic", pointLightQuadratic);
+        // spotLight
+        floorShader.setVec3("spotLight.position", camera.Position);
+        floorShader.setVec3("spotLight.direction", camera.Front);
+        floorShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+        floorShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+        floorShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+        floorShader.setFloat("spotLight.constant", 1.0f);
+        floorShader.setFloat("spotLight.linear", 0.09);
+        floorShader.setFloat("spotLight.quadratic", 0.032);
+        floorShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(2.5f)));
+        floorShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(22.0f)));
+
+        floorShader.setVec3("viewPos", camera.Position);
+        floorShader.setFloat("material.shininess", 4.0f);
+
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, floorTexture);
+        glBindTexture(GL_TEXTURE_2D, floorDiffTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, floorSpecTexture);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(20.0f, 0.0f, 20.0f));
+        model = glm::scale(model, glm::vec3(20.0f, 1.0f, 20.0f));
         floorShader.setMat4("model", model);
         glBindVertexArray(floorVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
