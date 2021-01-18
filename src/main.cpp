@@ -147,50 +147,50 @@ int main()
         // cake
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.5f,-2.15f, 3.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         objectShader.setMat4("model", model);
         cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, 3.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         objectShader.setMat4("model", model);
         cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.5f,-2.15f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         objectShader.setMat4("model", model);
         cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         objectShader.setMat4("model", model);
         cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.5f,-2.15f, -3.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         objectShader.setMat4("model", model);
         cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, -3.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         objectShader.setMat4("model", model);
         cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         objectShader.setMat4("model", model);
         cakeModel.Draw(objectShader);
 
@@ -292,8 +292,8 @@ int main()
         glBindTexture(GL_TEXTURE_2D, floorSpecTexture);
 
         model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(20.0f, 1.0f, 20.0f));
         model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(20.0f, 1.0f, 20.0f));
         floorShader.setMat4("model", model);
         glBindVertexArray(floorVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
