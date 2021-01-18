@@ -66,12 +66,52 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // shaders
-    Shader ourShader("resources/shaders/1.model_loading.vs", "resources/shaders/1.model_loading.fs");
+    Shader objectShader("resources/shaders/object.vs", "resources/shaders/object.fs");
+    Shader floorShader("resources/shaders/floor.vs", "resources/shaders/floor.fs");
+    Shader lightShader("resources/shaders/light_source.vs", "resources/shaders/light_source.fs");
 
     // models
     Model tableModel(FileSystem::getPath("resources/objects/dining_table/dining_table.obj"));
     Model cakeModel(FileSystem::getPath("resources/objects/slice_of_cake/cake.obj"));
     Model lightModel(FileSystem::getPath("resources/objects/light/light.obj"));
+
+    // floor
+    float floorVertices[] = {
+            // positions          //normals            // texture coords
+            1.0f,  0.0f, 1.0f,    0.0f, 1.0f, 0.0f,    10.0f, 10.0f,
+            1.0f, 0.0f, -1.0f,    0.0f, 1.0f, 0.0f,    10.0f, 0.0f,
+            -1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f,    0.0f, 10.0f,
+            -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,    0.0f, 0.0f
+    };
+    unsigned int floorIndices[] = {
+            0, 1, 3, // first triangle
+            0, 2, 3  // second triangle
+    };
+    unsigned int floorVBO, floorVAO, floorEBO;
+    glGenVertexArrays(1, &floorVAO);
+    glGenBuffers(1, &floorVBO);
+    glGenBuffers(1, &floorEBO);
+
+    glBindVertexArray(floorVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), floorVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floorEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(floorIndices), floorIndices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // normals attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // texture coord attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    unsigned int floorTexture = TextureFromFile("floor_diffuse.png", "resources/objects/floor");
+
 
     while (!glfwWindowShouldClose(window))
     {
@@ -84,19 +124,19 @@ int main()
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ourShader.use();
 
+        objectShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        objectShader.setMat4("projection", projection);
+        objectShader.setMat4("view", view);
 
         // table
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.4f, 1.4f, 1.4f));
-        ourShader.setMat4("model", model);
-        tableModel.Draw(ourShader);
+        objectShader.setMat4("model", model);
+        tableModel.Draw(objectShader);
 
         // TODO: Napraviti funkciju za cake i light
         // cake
@@ -104,76 +144,96 @@ int main()
         model = glm::translate(model, glm::vec3(-1.5f,-2.15f, 3.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        cakeModel.Draw(ourShader);
+        objectShader.setMat4("model", model);
+        cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, 3.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        cakeModel.Draw(ourShader);
+        objectShader.setMat4("model", model);
+        cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.5f,-2.15f, 0.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        cakeModel.Draw(ourShader);
+        objectShader.setMat4("model", model);
+        cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, 0.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        cakeModel.Draw(ourShader);
+        objectShader.setMat4("model", model);
+        cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.5f,-2.15f, -3.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        cakeModel.Draw(ourShader);
+        objectShader.setMat4("model", model);
+        cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, -3.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        cakeModel.Draw(ourShader);
-
+        objectShader.setMat4("model", model);
+        cakeModel.Draw(objectShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(1.5f,-2.15f, 0.0f));
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
-        cakeModel.Draw(ourShader);
+        objectShader.setMat4("model", model);
+        cakeModel.Draw(objectShader);
 
 
         // light
+        lightShader.use();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 2.0f, -3.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        ourShader.setMat4("model", model);
-        lightModel.Draw(ourShader);
+        lightShader.setMat4("model", model);
+        lightModel.Draw(lightShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        ourShader.setMat4("model", model);
-        lightModel.Draw(ourShader);
+        lightShader.setMat4("model", model);
+        lightModel.Draw(lightShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 2.0f, 3.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        ourShader.setMat4("model", model);
-        lightModel.Draw(ourShader);
+        lightShader.setMat4("model", model);
+        lightModel.Draw(lightShader);
 
+        //floor
+        floorShader.use();
+        floorShader.setMat4("projection", projection);
+        floorShader.setMat4("view", view);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, floorTexture);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(20.0f, 0.0f, 20.0f));
+        floorShader.setMat4("model", model);
+        glBindVertexArray(floorVAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glDeleteVertexArrays(1, &floorVAO);
+    glDeleteBuffers(1, &floorVBO);
+    glDeleteBuffers(1, &floorEBO);
 
     glfwTerminate();
     return 0;
