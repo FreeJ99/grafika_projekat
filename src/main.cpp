@@ -197,23 +197,35 @@ int main()
         lightShader.setMat4("view", view);
 
         model = glm::mat4(1.0f);
-        pointLightPositions[0] = glm::vec3(0.0f, 2.0f, -3.0f);
-        model = glm::translate(model, pointLightPositions[0]);
+        model = glm::translate(model, glm::vec3(0.0f, 2.0f, -3.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
+        model = glm::rotate(model, glm::radians((float)(10.0 * sin(1.0 + glfwGetTime()))),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
+        pointLightPositions[0] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
         lightShader.setMat4("model", model);
         lightModel.Draw(lightShader);
 
         model = glm::mat4(1.0f);
-        pointLightPositions[1] = glm::vec3(0.0f, 2.0f, 0.0f);
-        model = glm::translate(model, pointLightPositions[1]);
+        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
+        model = glm::rotate(model, glm::radians((float)(10.0 * sin(glfwGetTime()))),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
+        pointLightPositions[1] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
         lightShader.setMat4("model", model);
         lightModel.Draw(lightShader);
 
         model = glm::mat4(1.0f);
-        pointLightPositions[2] = glm::vec3(0.0f, 2.0f, 3.0f);
-        model = glm::translate(model, pointLightPositions[2]);
+        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 3.0f));
         model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
+        model = glm::rotate(model, glm::radians((float)(10.0 * sin(2.0 + glfwGetTime()))),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
+        pointLightPositions[2] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
         lightShader.setMat4("model", model);
         lightModel.Draw(lightShader);
 
@@ -261,7 +273,7 @@ int main()
         floorShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(22.0f)));
 
         floorShader.setVec3("viewPos", camera.Position);
-        floorShader.setFloat("material.shininess", 4.0f);
+        floorShader.setFloat("material.shininess", 128.0f);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorDiffTexture);
@@ -269,8 +281,8 @@ int main()
         glBindTexture(GL_TEXTURE_2D, floorSpecTexture);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
         model = glm::scale(model, glm::vec3(20.0f, 1.0f, 20.0f));
+        model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
         floorShader.setMat4("model", model);
         glBindVertexArray(floorVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
