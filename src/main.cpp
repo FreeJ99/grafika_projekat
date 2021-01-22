@@ -12,11 +12,17 @@
 
 #include <iostream>
 
+void draw_cake(Model& model, Shader& shader, const glm::vec3& translation_vec);
+void set_light_bulb(Model& lightModel, Shader& lightShader, glm::vec3& pointLightPositions, float angle, const glm::vec3& translation_vec);
+void set_spot_light(Shader& shader, Camera& camera);
+void set_point_light(Shader& objectShader, glm::vec3& point_light_position, int i, float point_light_linear, float point_light_quadratic);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod);
 void processInput(GLFWwindow *window);
+
+
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -31,7 +37,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-bool isSpotlightActived = false;
+bool isSpotlightActivated = false;
 
 int main()
 {
@@ -71,7 +77,6 @@ int main()
 
     // shaders
     Shader objectShader("resources/shaders/object.vs", "resources/shaders/object.fs");
-    Shader floorShader("resources/shaders/floor.vs", "resources/shaders/floor.fs");
     Shader lightShader("resources/shaders/light_source.vs", "resources/shaders/light_source.fs");
 
     // models
@@ -129,12 +134,32 @@ int main()
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-        objectShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
+
+        // light
+        float pointLightLinear = 0.09;
+        float pointLightQuadratic = 0.032;
+        lightShader.use();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+
+        set_light_bulb(lightModel, lightShader, pointLightPositions[0], glm::radians((float)(10.0 * sin(1.0 + 2*glfwGetTime()))), glm::vec3(0.0f, 2.0f, -3.0f));
+        set_light_bulb(lightModel, lightShader, pointLightPositions[1], glm::radians((float)(10.0 * sin(2*glfwGetTime()))), glm::vec3(0.0f, 2.0f, 0.0f));
+        set_light_bulb(lightModel, lightShader, pointLightPositions[2], glm::radians((float)(10.0 * sin(2.0 + 2*glfwGetTime()))), glm::vec3(0.0f, 2.0f, 3.0f));
+
+        objectShader.use();
         objectShader.setMat4("projection", projection);
         objectShader.setMat4("view", view);
+
+        // point light 1
+        set_point_light(objectShader, pointLightPositions[0], 0, pointLightLinear, pointLightQuadratic);
+        // point light 2
+        set_point_light(objectShader, pointLightPositions[1], 1, pointLightLinear, pointLightQuadratic);
+        // point light 3
+        set_point_light(objectShader, pointLightPositions[2], 2, pointLightLinear, pointLightQuadratic);
+        // spotLight
+        set_spot_light(objectShader, camera);
 
         // table
         glm::mat4 model = glm::mat4(1.0f);
@@ -143,149 +168,15 @@ int main()
         objectShader.setMat4("model", model);
         tableModel.Draw(objectShader);
 
-        // TODO: Napraviti funkciju za cake i light
         // cake
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.5f,-2.15f, 3.0f));
-        model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-        objectShader.setMat4("model", model);
-        cakeModel.Draw(objectShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.5f,-2.15f, 3.0f));
-        model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-        objectShader.setMat4("model", model);
-        cakeModel.Draw(objectShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.5f,-2.15f, 0.0f));
-        model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-        objectShader.setMat4("model", model);
-        cakeModel.Draw(objectShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.5f,-2.15f, 0.0f));
-        model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-        objectShader.setMat4("model", model);
-        cakeModel.Draw(objectShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.5f,-2.15f, -3.0f));
-        model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-        objectShader.setMat4("model", model);
-        cakeModel.Draw(objectShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.5f,-2.15f, -3.0f));
-        model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-        objectShader.setMat4("model", model);
-        cakeModel.Draw(objectShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.5f,-2.15f, 0.0f));
-        model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-        objectShader.setMat4("model", model);
-        cakeModel.Draw(objectShader);
-
-
-        // light
-        lightShader.use();
-        lightShader.setMat4("projection", projection);
-        lightShader.setMat4("view", view);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 2.0f, -3.0f));
-        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)(10.0 * sin(1.0 + 2*glfwGetTime()))),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
-        pointLightPositions[0] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
-        lightShader.setMat4("model", model);
-        lightModel.Draw(lightShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)(10.0 * sin(2*glfwGetTime()))),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
-        pointLightPositions[1] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
-        lightShader.setMat4("model", model);
-        lightModel.Draw(lightShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 2.0f, 3.0f));
-        model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
-        model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)(10.0 * sin(2.0 + 2*glfwGetTime()))),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
-        pointLightPositions[2] = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
-        lightShader.setMat4("model", model);
-        lightModel.Draw(lightShader);
+        draw_cake(cakeModel, objectShader, glm::vec3(1.5f,-2.15f, 3.0f));
+        draw_cake(cakeModel, objectShader, glm::vec3(-1.5f,-2.15f, 3.0f));
+        draw_cake(cakeModel, objectShader, glm::vec3(1.5f,-2.15f, 0.0f));
+        draw_cake(cakeModel, objectShader, glm::vec3(-1.5f,-2.15f, 0.0f));
+        draw_cake(cakeModel, objectShader, glm::vec3(1.5f,-2.15f, -3.0f));
+        draw_cake(cakeModel, objectShader, glm::vec3(-1.5f,-2.15f, -3.0f));
 
         //floor
-        floorShader.use();
-        floorShader.setMat4("projection", projection);
-        floorShader.setMat4("view", view);
-
-        float pointLightLinear = 0.09;
-        float pointLightQuadratic = 0.032;
-        // point light 1
-        floorShader.setVec3("pointLights[0].position", pointLightPositions[0]);
-        floorShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-        floorShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-        floorShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-        floorShader.setFloat("pointLights[0].constant", 1.0f);
-        floorShader.setFloat("pointLights[0].linear", pointLightLinear);
-        floorShader.setFloat("pointLights[0].quadratic", pointLightQuadratic);
-        // point light 2
-        floorShader.setVec3("pointLights[1].position", pointLightPositions[1]);
-        floorShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-        floorShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
-        floorShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-        floorShader.setFloat("pointLights[1].constant", 1.0f);
-        floorShader.setFloat("pointLights[1].linear", pointLightLinear);
-        floorShader.setFloat("pointLights[1].quadratic", pointLightQuadratic);
-        // point light 3
-        floorShader.setVec3("pointLights[2].position", pointLightPositions[2]);
-        floorShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
-        floorShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
-        floorShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-        floorShader.setFloat("pointLights[2].constant", 1.0f);
-        floorShader.setFloat("pointLights[2].linear", pointLightLinear);
-        floorShader.setFloat("pointLights[2].quadratic", pointLightQuadratic);
-        // spotLight
-        floorShader.setVec3("spotLight.position", camera.Position);
-        floorShader.setVec3("spotLight.direction", camera.Front);
-        if(isSpotlightActived){
-            floorShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-            floorShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-            floorShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
-        }
-        else{ // All to 0.
-            floorShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-            floorShader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f);
-            floorShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f);
-        }
-        floorShader.setFloat("spotLight.constant", 1.0f);
-        floorShader.setFloat("spotLight.linear", 0.09);
-        floorShader.setFloat("spotLight.quadratic", 0.032);
-        floorShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(2.5f)));
-        floorShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(22.0f)));
-
-        floorShader.setVec3("viewPos", camera.Position);
-        floorShader.setFloat("material.shininess", 128.0f);
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, floorDiffTexture);
         glActiveTexture(GL_TEXTURE1);
@@ -294,7 +185,7 @@ int main()
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
         model = glm::scale(model, glm::vec3(20.0f, 1.0f, 20.0f));
-        floorShader.setMat4("model", model);
+        objectShader.setMat4("model", model);
         glBindVertexArray(floorVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -310,8 +201,61 @@ int main()
     return 0;
 }
 
-void processInput(GLFWwindow *window)
-{
+void set_light_bulb(Model& lightModel, Shader& lightShader, glm::vec3& pointLightPositions, float angle, const glm::vec3& translation_vec) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, translation_vec);
+    model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 1.32f, 0.0f));
+    model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::translate(model, glm::vec3(0.0f, -1.32f, 0.0f));
+    pointLightPositions = glm::vec3(model * glm::vec4(0.0f, 0.2f, 0.0f, 1.0f));
+    lightShader.setMat4("model", model);
+    lightModel.Draw(lightShader);
+}
+
+void draw_cake(Model& cakeModel, Shader& objectShader, const glm::vec3& translation_vec) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, translation_vec);
+    model = glm::rotate(model, -0.3f, glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+    objectShader.setMat4("model", model);
+    cakeModel.Draw(objectShader);
+}
+
+void set_spot_light(Shader& objectShader, Camera& camera) {
+    objectShader.setVec3("spotLight.position", camera.Position);
+    objectShader.setVec3("spotLight.direction", camera.Front);
+    if(isSpotlightActivated){
+        objectShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+        objectShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+        objectShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+    }
+    else{ // All to 0.
+        objectShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+        objectShader.setVec3("spotLight.diffuse", 0.0f, 0.0f, 0.0f);
+        objectShader.setVec3("spotLight.specular", 0.0f, 0.0f, 0.0f);
+    }
+    objectShader.setFloat("spotLight.constant", 1.0f);
+    objectShader.setFloat("spotLight.linear", 0.01);
+    objectShader.setFloat("spotLight.quadratic", 0.001);
+    objectShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(2.5f)));
+    objectShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(22.0f)));
+
+    objectShader.setVec3("viewPos", camera.Position);
+    objectShader.setFloat("material.shininess", 128.0f);
+}
+
+void set_point_light(Shader& objectShader, glm::vec3& point_light_position, int i, float point_light_linear, float point_light_quadratic) {
+    objectShader.setVec3("pointLights[" + to_string(i) + "].position", point_light_position);
+    objectShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.05f, 0.05f, 0.05f);
+    objectShader.setVec3("pointLights[" + to_string(i) + "].diffuse", 0.8f, 0.8f, 0.8f);
+    objectShader.setVec3("pointLights[" + to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
+    objectShader.setFloat("pointLights[" + to_string(i) + "].constant", 1.0f);
+    objectShader.setFloat("pointLights[" + to_string(i) + "].linear", point_light_linear);
+    objectShader.setFloat("pointLights[" + to_string(i) + "].quadratic", point_light_quadratic);
+}
+
+void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -325,13 +269,11 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (firstMouse)
     {
         lastX = xpos;
@@ -348,13 +290,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(yoffset);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod) {
     if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-        isSpotlightActived = !isSpotlightActived;
+        isSpotlightActivated = !isSpotlightActivated;
     }
 }
