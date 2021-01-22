@@ -38,6 +38,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 bool isSpotlightActivated = false;
+bool effect = false;    // da li stavljamo efekat (grayscale)
 
 int main()
 {
@@ -78,11 +79,24 @@ int main()
     // shaders
     Shader objectShader("resources/shaders/object.vs", "resources/shaders/object.fs");
     Shader lightShader("resources/shaders/light_source.vs", "resources/shaders/light_source.fs");
+    Shader screenShader("resources/shaders/screen.vs", "resources/shaders/screen.fs");
 
     // models
     Model tableModel(FileSystem::getPath("resources/objects/dining_table/dining_table.obj"));
     Model cakeModel(FileSystem::getPath("resources/objects/slice_of_cake/cake.obj"));
     Model lightModel(FileSystem::getPath("resources/objects/light/light.obj"));
+
+    // screen vertexes
+    float quadVertices[] = {
+            // positions   // texCoords
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            -1.0f, -1.0f,  0.0f, 0.0f,
+            1.0f, -1.0f,  1.0f, 0.0f,
+
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            1.0f, -1.0f,  1.0f, 0.0f,
+            1.0f,  1.0f,  1.0f, 1.0f
+    };
 
     // floor
     float floorVertices[] = {
@@ -119,6 +133,44 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    // setup screen VAO
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+    // configure MSAA framebuffer
+    // --------------------------
+    unsigned int framebuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    // create a multisampled color attachment texture
+    unsigned int textureColorBufferMultiSampled;
+    glGenTextures(1, &textureColorBufferMultiSampled);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
+    // create a (also multisampled) renderbuffer object for depth and stencil attachments
+    unsigned int rbo;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    screenShader.setInt("screenTexture", 0);
+
     unsigned int floorDiffTexture = TextureFromFile("floor_diffuse.png", "resources/objects/floor");
     unsigned int floorSpecTexture = TextureFromFile("floor_specular2.png", "resources/objects/floor");
 
@@ -131,8 +183,11 @@ int main()
 
         processInput(window);
 
+        // draw scene as normal in multisampled buffers
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
@@ -188,6 +243,21 @@ int main()
         objectShader.setMat4("model", model);
         glBindVertexArray(floorVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // 2. now render quad with scene's visuals as its texture image
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+
+        // draw Screen quad
+        screenShader.use();
+        screenShader.setInt("effect", effect);
+        glBindVertexArray(quadVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled); // use multisampled texture
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glEnable(GL_DEPTH_TEST);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -274,8 +344,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (firstMouse)
-    {
+    if (firstMouse) {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -298,4 +367,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_L && action == GLFW_PRESS) {
         isSpotlightActivated = !isSpotlightActivated;
     }
+
+    if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+        effect = !effect;
+    }
+
 }
