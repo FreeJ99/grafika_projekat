@@ -189,7 +189,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT,
+                                                0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
 
         // light
@@ -199,9 +200,15 @@ int main()
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("view", view);
 
-        set_light_bulb(lightModel, lightShader, pointLightPositions[0], glm::radians((float)(10.0 * sin(1.0 + 2*glfwGetTime()))), glm::vec3(0.0f, 2.0f, -3.0f));
-        set_light_bulb(lightModel, lightShader, pointLightPositions[1], glm::radians((float)(10.0 * sin(2*glfwGetTime()))), glm::vec3(0.0f, 2.0f, 0.0f));
-        set_light_bulb(lightModel, lightShader, pointLightPositions[2], glm::radians((float)(10.0 * sin(2.0 + 2*glfwGetTime()))), glm::vec3(0.0f, 2.0f, 3.0f));
+        set_light_bulb(lightModel, lightShader, pointLightPositions[0],
+                       glm::radians((float)(10.0 * sin(1.0 + 2*glfwGetTime()))),
+                       glm::vec3(0.0f, 2.0f, -3.0f));
+        set_light_bulb(lightModel, lightShader, pointLightPositions[1],
+                       glm::radians((float)(10.0 * sin(2*glfwGetTime()))),
+                       glm::vec3(0.0f, 2.0f, 0.0f));
+        set_light_bulb(lightModel, lightShader, pointLightPositions[2],
+                       glm::radians((float)(10.0 * sin(2.0 + 2*glfwGetTime()))),
+                       glm::vec3(0.0f, 2.0f, 3.0f));
 
         objectShader.use();
         objectShader.setMat4("projection", projection);
@@ -271,7 +278,8 @@ int main()
     return 0;
 }
 
-void set_light_bulb(Model& lightModel, Shader& lightShader, glm::vec3& pointLightPositions, float angle, const glm::vec3& translation_vec) {
+void set_light_bulb(Model& lightModel, Shader& lightShader, glm::vec3& pointLightPositions, float angle,
+                    const glm::vec3& translation_vec) {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, translation_vec);
     model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
@@ -315,7 +323,8 @@ void set_spot_light(Shader& objectShader, Camera& camera) {
     objectShader.setFloat("material.shininess", 128.0f);
 }
 
-void set_point_light(Shader& objectShader, glm::vec3& point_light_position, int i, float point_light_linear, float point_light_quadratic) {
+void set_point_light(Shader& objectShader, glm::vec3& point_light_position, int i, float point_light_linear,
+                     float point_light_quadratic) {
     objectShader.setVec3("pointLights[" + to_string(i) + "].position", point_light_position);
     objectShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.05f, 0.05f, 0.05f);
     objectShader.setVec3("pointLights[" + to_string(i) + "].diffuse", 0.8f, 0.8f, 0.8f);
